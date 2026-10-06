@@ -63,3 +63,10 @@ logs/
 *.tmp
 *.swp
 *.bak
+
+# ==============================
+# diagrams.net / draw.io
+# ==============================
+*.drawio.bkp
+*.drawio.dtmp
+
