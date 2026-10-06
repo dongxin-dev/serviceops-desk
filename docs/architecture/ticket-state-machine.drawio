@@ -1,0 +1,70 @@
+<mxfile host="Electron">
+  <diagram name="第 1 页" id="egP4kn6L94_yidfKfHEZ">
+    <mxGraphModel dx="1413" dy="1014" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-7" edge="1" parent="1" source="VyR8BOL5_XdzAst2gCNN-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="VyR8BOL5_XdzAst2gCNN-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-12" connectable="0" parent="VyR8BOL5_XdzAst2gCNN-7" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;div&gt;assign / claim&lt;/div&gt;&lt;div&gt;分配 / 领取&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.0333" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;div&gt;OPEN&lt;/div&gt;&lt;div&gt;待处理&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="120" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-8" edge="1" parent="1" source="VyR8BOL5_XdzAst2gCNN-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="VyR8BOL5_XdzAst2gCNN-3" value="&lt;div&gt;start progress&lt;/div&gt;&lt;div&gt;开始处理&lt;/div&gt;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="540" y="150" />
+              <mxPoint x="540" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;div&gt;ASSIGNED&lt;/div&gt;&lt;div&gt;已分配&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="358" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-9" edge="1" parent="1" source="VyR8BOL5_XdzAst2gCNN-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="VyR8BOL5_XdzAst2gCNN-4" value="&lt;div&gt;resolve&lt;/div&gt;&lt;div&gt;解决&lt;/div&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;div&gt;IN_PROGRESS&lt;/div&gt;&lt;div&gt;处理中&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="600" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-10" edge="1" parent="1" source="VyR8BOL5_XdzAst2gCNN-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="VyR8BOL5_XdzAst2gCNN-5" value="&lt;div&gt;close&lt;/div&gt;&lt;div&gt;关闭&lt;/div&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-11" edge="1" parent="1" source="VyR8BOL5_XdzAst2gCNN-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="VyR8BOL5_XdzAst2gCNN-6" value="&lt;div&gt;reopen&lt;/div&gt;&lt;div&gt;重新打开&lt;/div&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;div&gt;RESOLVED&lt;/div&gt;&lt;div&gt;已解决&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="840" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;div&gt;CLOSED&lt;/div&gt;&lt;div&gt;已关闭&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="1080" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-14" edge="1" parent="1" source="VyR8BOL5_XdzAst2gCNN-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="VyR8BOL5_XdzAst2gCNN-2" value="&lt;div&gt;reassign&lt;/div&gt;&lt;div&gt;重新分配&lt;/div&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;div&gt;REOPENED&lt;/div&gt;&lt;div&gt;重新打开&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="840" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-15" parent="1" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#ff0000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="30" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-16" edge="1" parent="1" source="VyR8BOL5_XdzAst2gCNN-15" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=bottom;endArrow=open;endSize=8;strokeColor=#ff0000;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="VyR8BOL5_XdzAst2gCNN-1" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="235" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-17" parent="1" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#ff0000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="1280" y="133" as="geometry" />
+        </mxCell>
+        <mxCell id="VyR8BOL5_XdzAst2gCNN-18" edge="1" parent="1" source="VyR8BOL5_XdzAst2gCNN-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.189;entryY=0.548;entryDx=0;entryDy=0;entryPerimeter=0;" target="VyR8BOL5_XdzAst2gCNN-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
