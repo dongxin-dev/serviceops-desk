@@ -70,3 +70,5 @@ logs/
 *.drawio.bkp
 *.drawio.dtmp
 
+# Local configuration
+config/application-local.yml
