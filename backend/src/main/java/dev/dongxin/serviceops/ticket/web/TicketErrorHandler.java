@@ -1,9 +1,12 @@
 package dev.dongxin.serviceops.ticket.web;
 
+import dev.dongxin.serviceops.ticket.application.exception.ActorNotFoundException;
+import dev.dongxin.serviceops.ticket.application.exception.AssigneeNotFoundException;
 import dev.dongxin.serviceops.ticket.application.exception.RequesterNotFoundException;
 import dev.dongxin.serviceops.ticket.application.exception.SlaPolicyNotConfiguredException;
 import dev.dongxin.serviceops.ticket.application.exception.TicketNotFoundException;
 import dev.dongxin.serviceops.ticket.application.exception.TicketStaleRevisionException;
+import dev.dongxin.serviceops.ticket.domain.IllegalTicketStateTransitionException;
 import dev.dongxin.serviceops.ticket.domain.TicketValidationException;
 import dev.dongxin.serviceops.ticket.web.dto.ApiErrorResponse;
 import dev.dongxin.serviceops.ticket.web.exception.InvalidTicketPatchRequestException;
@@ -37,6 +40,18 @@ public class TicketErrorHandler {
     public ResponseEntity<ApiErrorResponse> onRequesterNotFound(RequesterNotFoundException ex,
                                                                 HttpServletRequest request) {
         return build(HttpStatus.NOT_FOUND, "RequesterNotFound", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(AssigneeNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> onAssigneeNotFound(AssigneeNotFoundException ex,
+                                                               HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "AssigneeNotFound", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(ActorNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> onActorNotFound(ActorNotFoundException ex,
+                                                            HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "ActorNotFound", ex.getMessage(), request);
     }
 
     @ExceptionHandler(SlaPolicyNotConfiguredException.class)
@@ -89,6 +104,17 @@ public class TicketErrorHandler {
     public ResponseEntity<ApiErrorResponse> onStaleRevision(TicketStaleRevisionException ex,
                                                             HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, "TicketStaleRevision", ex.getMessage(), request);
+    }
+
+    /**
+     * The frozen state machine rejected the action for this ticket's current
+     * lifecycle state: the request is well-formed but conflicts with the
+     * resource state, hence 409 - not 400.
+     */
+    @ExceptionHandler(IllegalTicketStateTransitionException.class)
+    public ResponseEntity<ApiErrorResponse> onIllegalTransition(IllegalTicketStateTransitionException ex,
+                                                                HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "IllegalTicketStateTransition", ex.getMessage(), request);
     }
 
     /** Real race window hit by JPA @Version after the application pre-check. */

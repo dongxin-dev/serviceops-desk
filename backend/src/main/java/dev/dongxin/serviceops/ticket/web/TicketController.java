@@ -7,7 +7,9 @@ import dev.dongxin.serviceops.ticket.application.port.PageResult;
 import dev.dongxin.serviceops.ticket.domain.Ticket;
 import dev.dongxin.serviceops.ticket.domain.TicketPriority;
 import dev.dongxin.serviceops.ticket.domain.TicketStatus;
+import dev.dongxin.serviceops.ticket.web.dto.AssignTicketRequest;
 import dev.dongxin.serviceops.ticket.web.dto.CreateTicketRequest;
+import dev.dongxin.serviceops.ticket.web.dto.TicketActionRequest;
 import dev.dongxin.serviceops.ticket.web.dto.TicketListResponse;
 import dev.dongxin.serviceops.ticket.web.dto.TicketResponse;
 import dev.dongxin.serviceops.ticket.web.dto.UpdateTicketRequest;
@@ -83,5 +85,41 @@ public class TicketController {
     public TicketResponse patch(@PathVariable Long id,
                                 @Valid @RequestBody UpdateTicketRequest request) {
         return TicketResponse.from(ticketService.patch(request.toCommand(id)));
+    }
+
+    /**
+     * Lifecycle actions. Each endpoint is one explicit business action - there
+     * is no generic status patch; legality is decided solely by the domain.
+     * Success returns the full ticket with the freshly incremented version.
+     */
+    @PostMapping("/{id}/assign")
+    public TicketResponse assign(@PathVariable Long id,
+                                 @Valid @RequestBody AssignTicketRequest request) {
+        return TicketResponse.from(ticketService.assign(id, request.assigneeId(),
+                request.actorId(), request.version()));
+    }
+
+    @PostMapping("/{id}/start")
+    public TicketResponse start(@PathVariable Long id,
+                                @Valid @RequestBody TicketActionRequest request) {
+        return TicketResponse.from(ticketService.start(id, request.version()));
+    }
+
+    @PostMapping("/{id}/resolve")
+    public TicketResponse resolve(@PathVariable Long id,
+                                  @Valid @RequestBody TicketActionRequest request) {
+        return TicketResponse.from(ticketService.resolve(id, request.version()));
+    }
+
+    @PostMapping("/{id}/close")
+    public TicketResponse close(@PathVariable Long id,
+                                @Valid @RequestBody TicketActionRequest request) {
+        return TicketResponse.from(ticketService.close(id, request.version()));
+    }
+
+    @PostMapping("/{id}/reopen")
+    public TicketResponse reopen(@PathVariable Long id,
+                                 @Valid @RequestBody TicketActionRequest request) {
+        return TicketResponse.from(ticketService.reopen(id, request.version()));
     }
 }

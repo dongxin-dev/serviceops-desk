@@ -159,6 +159,96 @@ public class Ticket {
         this.updatedAt = updatedAt;
     }
 
+    // ------------------------------------------------------------------
+    // Lifecycle behaviours - the ONLY place where frozen state-machine
+    // transition rules live. Each method expresses a business action,
+    // not a target status.
+    // ------------------------------------------------------------------
+
+    /**
+     * Assigns this ticket to a user and moves it to ASSIGNED.
+     *
+     * <p>Valid from OPEN (fresh assignment) and from REOPENED (a new handling
+     * cycle). The returned {@link AssignmentType} is the business meaning of
+     * this act for the assignment history - callers must never derive it
+     * themselves. Any other current status is an illegal transition.
+     */
+    public AssignmentType assign(Long assigneeId, OffsetDateTime now) {
+        requireNow(now);
+        if (assigneeId == null || assigneeId <= 0) {
+            throw new TicketValidationException("assigneeId must be a positive id");
+        }
+        AssignmentType type;
+        if (status == TicketStatus.OPEN) {
+            type = AssignmentType.ASSIGN;
+        } else if (status == TicketStatus.REOPENED) {
+            type = AssignmentType.REASSIGN;
+        } else {
+            throw new IllegalTicketStateTransitionException("assign", status);
+        }
+        status = TicketStatus.ASSIGNED;
+        currentAssigneeId = assigneeId;
+        updatedAt = now;
+        return type;
+    }
+
+    /**
+     * ASSIGNED -> IN_PROGRESS. firstRespondedAt is stamped exactly once ever -
+     * a later reopen / reassign / start cycle must never overwrite it.
+     */
+    public void startProgress(OffsetDateTime now) {
+        requireNow(now);
+        requireStatus(TicketStatus.ASSIGNED, "startProgress");
+        status = TicketStatus.IN_PROGRESS;
+        if (firstRespondedAt == null) {
+            firstRespondedAt = now;
+        }
+        updatedAt = now;
+    }
+
+    /** IN_PROGRESS -> RESOLVED; resolvedAt is (re-)stamped on every resolve. */
+    public void resolve(OffsetDateTime now) {
+        requireNow(now);
+        requireStatus(TicketStatus.IN_PROGRESS, "resolve");
+        status = TicketStatus.RESOLVED;
+        resolvedAt = now;
+        updatedAt = now;
+    }
+
+    /** RESOLVED -> CLOSED, the terminal state. resolvedAt stays untouched. */
+    public void close(OffsetDateTime now) {
+        requireNow(now);
+        requireStatus(TicketStatus.RESOLVED, "close");
+        status = TicketStatus.CLOSED;
+        closedAt = now;
+        updatedAt = now;
+    }
+
+    /**
+     * RESOLVED -> REOPENED: the resolution did not hold. resolvedAt is cleared;
+     * currentAssigneeId is deliberately kept until a (re)assignment replaces
+     * it; closedAt is unreachable from here (CLOSED has no exit transitions).
+     */
+    public void reopen(OffsetDateTime now) {
+        requireNow(now);
+        requireStatus(TicketStatus.RESOLVED, "reopen");
+        status = TicketStatus.REOPENED;
+        resolvedAt = null;
+        updatedAt = now;
+    }
+
+    private void requireStatus(TicketStatus expected, String action) {
+        if (status != expected) {
+            throw new IllegalTicketStateTransitionException(action, status);
+        }
+    }
+
+    private static void requireNow(OffsetDateTime now) {
+        if (now == null) {
+            throw new TicketValidationException("operation time must not be null");
+        }
+    }
+
     public Long getId() {
         return id;
     }

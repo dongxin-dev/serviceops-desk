@@ -139,6 +139,26 @@ public class TicketJpaEntity {
         this.updatedAt = updatedAt;
     }
 
+    /**
+     * Copies the lifecycle state of an existing aggregate onto this MANAGED
+     * entity for the assign / state-action use cases. Only the lifecycle group
+     * may be written; title / description / category / ticketNo / priority /
+     * requester / SLA fields / escalationLevel / version / createdAt are
+     * untouched - the domain has already validated every value here against
+     * the frozen state machine. No combined applyEverything() exists on purpose:
+     * each business boundary keeps its own narrow write surface.
+     */
+    void applyLifecycleState(TicketStatus status, Long currentAssigneeId,
+                             OffsetDateTime firstRespondedAt, OffsetDateTime resolvedAt,
+                             OffsetDateTime closedAt, OffsetDateTime updatedAt) {
+        this.status = status;
+        this.currentAssigneeId = currentAssigneeId;
+        this.firstRespondedAt = firstRespondedAt;
+        this.resolvedAt = resolvedAt;
+        this.closedAt = closedAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getId() {
         return id;
     }

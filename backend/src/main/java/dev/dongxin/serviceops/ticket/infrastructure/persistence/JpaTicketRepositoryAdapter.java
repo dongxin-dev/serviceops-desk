@@ -82,8 +82,13 @@ public class JpaTicketRepositoryAdapter implements TicketRepository {
             throw new TicketStaleRevisionException(ticket.getId(), managed.getVersion(),
                     ticket.getVersion());
         }
+        // Two narrow snapshot groups instead of one applyEverything():
+        // basic info written by the patch use case, lifecycle by the actions.
         managed.applyMutableState(ticket.getTitle(), ticket.getDescription(),
                 ticket.getCategory(), ticket.getUpdatedAt());
+        managed.applyLifecycleState(ticket.getStatus(), ticket.getCurrentAssigneeId(),
+                ticket.getFirstRespondedAt(), ticket.getResolvedAt(),
+                ticket.getClosedAt(), ticket.getUpdatedAt());
         TicketJpaEntity flushed = ticketTable.saveAndFlush(managed);
         return TicketJpaMapper.toDomain(flushed);
     }
