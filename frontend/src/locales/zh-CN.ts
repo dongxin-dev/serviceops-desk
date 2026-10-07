@@ -1,0 +1,92 @@
+export default {
+  app: {
+    brand: 'ServiceOps Desk',
+  },
+  nav: {
+    tickets: '工单管理',
+  },
+  header: {
+    tickets: '工单列表',
+  },
+  language: {
+    label: '语言',
+    zh: '中文',
+    en: 'English',
+  },
+  common: {
+    none: '--',
+  },
+  ticket: {
+    columns: {
+      ticketNo: '工单号',
+      title: '标题',
+      priority: '优先级',
+      status: '状态',
+      assignee: '当前处理人',
+      createdAt: '创建时间',
+      actions: '操作',
+    },
+    actions: {
+      view: '查看',
+    },
+    filters: {
+      statusAll: '全部状态',
+      priorityAll: '全部优先级',
+    },
+    empty: '暂无工单',
+    loadFailed: '加载工单列表失败',
+    retry: '重试',
+  },
+  detail: {
+    title: '工单详情',
+    loading: '正在加载工单…',
+    loadFailed: '加载工单详情失败',
+    sections: {
+      basic: '基本信息',
+      assignment: '分配信息',
+      sla: '服务级别',
+      lifecycle: '生命周期',
+      system: '系统信息',
+    },
+    fields: {
+      ticketNo: '工单号',
+      title: '标题',
+      description: '描述',
+      category: '分类',
+      priority: '优先级',
+      status: '状态',
+      requesterId: '申请人 ID',
+      currentAssigneeId: '当前处理人 ID',
+      slaPolicyId: 'SLA 策略 ID',
+      responseDueAt: '响应截止',
+      resolutionDueAt: '解决截止',
+      firstRespondedAt: '首次响应时间',
+      resolvedAt: '解决时间',
+      closedAt: '关闭时间',
+      escalationLevel: '升级级别',
+      version: '版本号',
+      createdAt: '创建时间',
+      updatedAt: '更新时间',
+    },
+  },
+  status: {
+    OPEN: '待处理',
+    ASSIGNED: '已分配',
+    IN_PROGRESS: '处理中',
+    RESOLVED: '已解决',
+    CLOSED: '已关闭',
+    REOPENED: '已重开',
+  },
+  priority: {
+    P1_CRITICAL: 'P1 紧急',
+    P2_HIGH: 'P2 高',
+    P3_MEDIUM: 'P3 中',
+    P4_LOW: 'P4 低',
+  },
+  errors: {
+    ticketNotFound: '工单不存在，可能已被删除，请刷新后重试。',
+    validationError: '请求参数不符合要求。',
+    networkError: '无法连接后端服务，请确认服务已启动。',
+    unknownError: '发生未知错误，请稍后重试。',
+  },
+}

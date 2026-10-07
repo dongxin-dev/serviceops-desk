@@ -1,0 +1,92 @@
+export default {
+  app: {
+    brand: 'ServiceOps Desk',
+  },
+  nav: {
+    tickets: 'Tickets',
+  },
+  header: {
+    tickets: 'Ticket List',
+  },
+  language: {
+    label: 'Language',
+    zh: '中文',
+    en: 'English',
+  },
+  common: {
+    none: '--',
+  },
+  ticket: {
+    columns: {
+      ticketNo: 'Ticket No',
+      title: 'Title',
+      priority: 'Priority',
+      status: 'Status',
+      assignee: 'Current Assignee',
+      createdAt: 'Created At',
+      actions: 'Actions',
+    },
+    actions: {
+      view: 'View',
+    },
+    filters: {
+      statusAll: 'All statuses',
+      priorityAll: 'All priorities',
+    },
+    empty: 'No tickets found',
+    loadFailed: 'Failed to load the ticket list',
+    retry: 'Retry',
+  },
+  detail: {
+    title: 'Ticket Detail',
+    loading: 'Loading ticket…',
+    loadFailed: 'Failed to load ticket detail',
+    sections: {
+      basic: 'Basic Information',
+      assignment: 'Assignment',
+      sla: 'Service Level (SLA)',
+      lifecycle: 'Lifecycle',
+      system: 'System',
+    },
+    fields: {
+      ticketNo: 'Ticket No',
+      title: 'Title',
+      description: 'Description',
+      category: 'Category',
+      priority: 'Priority',
+      status: 'Status',
+      requesterId: 'Requester ID',
+      currentAssigneeId: 'Current Assignee ID',
+      slaPolicyId: 'SLA Policy ID',
+      responseDueAt: 'Response Due',
+      resolutionDueAt: 'Resolution Due',
+      firstRespondedAt: 'First Responded',
+      resolvedAt: 'Resolved At',
+      closedAt: 'Closed At',
+      escalationLevel: 'Escalation Level',
+      version: 'Version',
+      createdAt: 'Created At',
+      updatedAt: 'Updated At',
+    },
+  },
+  status: {
+    OPEN: 'Open',
+    ASSIGNED: 'Assigned',
+    IN_PROGRESS: 'In Progress',
+    RESOLVED: 'Resolved',
+    CLOSED: 'Closed',
+    REOPENED: 'Reopened',
+  },
+  priority: {
+    P1_CRITICAL: 'P1 Critical',
+    P2_HIGH: 'P2 High',
+    P3_MEDIUM: 'P3 Medium',
+    P4_LOW: 'P4 Low',
+  },
+  errors: {
+    ticketNotFound: 'This ticket no longer exists. Refresh and try again.',
+    validationError: 'The request was rejected due to invalid parameters.',
+    networkError: 'Cannot reach the backend service. Make sure it is running.',
+    unknownError: 'An unexpected error occurred. Please try again later.',
+  },
+}

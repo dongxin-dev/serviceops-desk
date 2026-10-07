@@ -1,0 +1,77 @@
+/* Enterprise shell: restrained spacing, no decorative noise. */
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  font-family:
+    'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+}
+
+.app-shell {
+  height: 100%;
+}
+
+.app-aside {
+  border-right: 1px solid var(--el-border-color-light);
+  background: #fff;
+}
+
+.app-brand {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--el-text-color-primary);
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.app-menu {
+  border-right: none;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--el-border-color-light);
+  background: #fff;
+}
+
+.app-page-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.app-lang {
+  cursor: pointer;
+  color: var(--el-text-color-regular);
+  outline: none;
+}
+
+.app-main {
+  background: var(--el-fill-color-lighter);
+}
+
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.list-card {
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 4px;
+}
+
+.list-pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
