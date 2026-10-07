@@ -65,3 +65,29 @@ export interface ApiErrorResponse {
   message: string
   path: string
 }
+
+/**
+ * Body of POST /api/v1/tickets -> CreateTicketRequest. Everything else
+ * (ticketNo / status / SLA / version / timestamps) is derived server-side
+ * and MUST NOT be sent from the client.
+ */
+export interface CreateTicketInput {
+  title: string
+  description: string
+  category: string
+  priority: TicketPriority
+  requesterId: number
+}
+
+/**
+ * Body of PATCH /api/v1/tickets/{id} -> UpdateTicketRequest.
+ * version is the optimistic-lock token and is always carried; a business
+ * field is included ONLY when it actually changed - absent means "keep",
+ * and an explicit null is rejected by the backend with 400.
+ */
+export interface UpdateTicketInput {
+  version: number
+  title?: string
+  description?: string
+  category?: string
+}

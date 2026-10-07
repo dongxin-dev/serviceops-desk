@@ -15,6 +15,8 @@ export default {
   },
   common: {
     none: '--',
+    save: '保存',
+    cancel: '取消',
   },
   ticket: {
     columns: {
@@ -28,6 +30,8 @@ export default {
     },
     actions: {
       view: '查看',
+      create: '新建工单',
+      edit: '编辑',
     },
     filters: {
       statusAll: '全部状态',
@@ -69,6 +73,25 @@ export default {
       updatedAt: '更新时间',
     },
   },
+  create: {
+    title: '新建工单',
+    placeholder: {
+      requesterId: '请输入申请人 ID',
+    },
+    rules: {
+      required: '不能为空',
+      titleMax: '标题长度不能超过 200 个字符',
+      categoryMax: '分类长度不能超过 64 个字符',
+      requesterPositive: '申请人 ID 必须是正整数',
+    },
+  },
+  edit: {
+    title: '编辑工单',
+  },
+  feedback: {
+    created: '工单已创建',
+    updated: '工单已更新',
+  },
   status: {
     OPEN: '待处理',
     ASSIGNED: '已分配',
@@ -88,5 +111,10 @@ export default {
     validationError: '请求参数不符合要求。',
     networkError: '无法连接后端服务，请确认服务已启动。',
     unknownError: '发生未知错误，请稍后重试。',
+    requesterNotFound: '申请人不存在，请检查 ID 是否正确。',
+    slaNotConfigured: '该优先级暂未配置 SLA 策略，无法创建工单。',
+    ticketValidation: '填写内容未通过业务校验。',
+    invalidPatch: '请求包含不允许修改的字段。',
+    staleRevision: '工单已被其他操作更新，请重新加载后再试。',
   },
 }

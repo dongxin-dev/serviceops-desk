@@ -6,6 +6,7 @@ import { listTickets } from '@/api/tickets'
 import { isApiError } from '@/api/http'
 import { formatDateTime } from '@/locales/format'
 import TicketDetailDrawer from './components/TicketDetailDrawer.vue'
+import TicketCreateDialog from './components/TicketCreateDialog.vue'
 import TicketPriorityTag from './components/TicketPriorityTag.vue'
 import TicketStatusTag from './components/TicketStatusTag.vue'
 import type { TicketPriority, TicketStatus, TicketSummary } from '@/types/ticket'
@@ -37,8 +38,14 @@ const uiSize = ref(20)
 
 const drawerOpen = ref(false)
 const selectedId = ref<number | null>(null)
+const createVisible = ref(false)
+
+// Race guard: only the newest request may write UI state; late responses
+// from superseded loads (fast filter/page switches) are dropped silently.
+let requestSeq = 0
 
 async function load() {
+  const seq = ++requestSeq
   loading.value = true
   errorMessage.value = ''
   try {
@@ -48,15 +55,17 @@ async function load() {
       status: statusFilter.value === '' ? undefined : statusFilter.value,
       priority: priorityFilter.value === '' ? undefined : priorityFilter.value,
     })
+    if (seq !== requestSeq) return
     rows.value = result.content
     totalElements.value = result.totalElements
   } catch (error) {
+    if (seq !== requestSeq) return
     rows.value = []
     totalElements.value = 0
     errorMessage.value = describeError(error)
     console.warn('ticket list load failed', error)
   } finally {
-    loading.value = false
+    if (seq === requestSeq) loading.value = false
   }
 }
 
@@ -121,6 +130,9 @@ function displayDate(value: string): string {
       <el-option :value="''" :label="t('ticket.filters.priorityAll')" />
       <el-option v-for="p in PRIORITY_OPTIONS" :key="p" :value="p" :label="t(`priority.${p}`)" />
     </el-select>
+    <el-button class="create-button" type="primary" @click="createVisible = true">{{
+      t('ticket.actions.create')
+    }}</el-button>
   </div>
 
   <div class="list-card">
@@ -191,12 +203,18 @@ function displayDate(value: string): string {
     </div>
   </div>
 
-  <TicketDetailDrawer v-model="drawerOpen" :ticket-id="selectedId" />
+  <TicketDetailDrawer v-model="drawerOpen" :ticket-id="selectedId" @updated="load" />
+
+  <TicketCreateDialog v-model="createVisible" @created="load" />
 </template>
 
 <style scoped>
 .filter-select {
   width: 180px;
+}
+
+.create-button {
+  margin-left: auto;
 }
 
 .list-error {

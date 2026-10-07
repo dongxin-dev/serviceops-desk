@@ -7,16 +7,22 @@ import { isApiError } from '@/api/http'
 import { formatDateTime } from '@/locales/format'
 import TicketPriorityTag from './TicketPriorityTag.vue'
 import TicketStatusTag from './TicketStatusTag.vue'
+import TicketEditDialog from './TicketEditDialog.vue'
 import type { Ticket } from '@/types/ticket'
 
 const props = defineProps<{ modelValue: boolean; ticketId: number | null }>()
-const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
+const emit = defineEmits<{ 'update:modelValue': [value: boolean]; updated: [] }>()
 
 const { t, locale } = useI18n()
 
 const ticket = ref<Ticket | null>(null)
 const loading = ref(false)
 const errorMessage = ref('')
+const editVisible = ref(false)
+
+// Race guard: only the newest request may write UI state; late responses
+// from superseded opens are dropped silently. No library, no AbortController.
+let requestSeq = 0
 
 // Every open re-GETs the full ticket: list summaries must never masquerade
 // as detail data.
@@ -29,17 +35,38 @@ watch(
 )
 
 async function load(id: number) {
+  const seq = ++requestSeq
   loading.value = true
   errorMessage.value = ''
   ticket.value = null
   try {
-    ticket.value = await getTicket(id)
+    const result = await getTicket(id)
+    if (seq !== requestSeq) return
+    ticket.value = result
   } catch (error) {
+    if (seq !== requestSeq) return
     errorMessage.value = describeError(error)
     console.warn('ticket detail load failed', error)
   } finally {
-    loading.value = false
+    if (seq === requestSeq) loading.value = false
   }
+}
+
+function onUpdated(updated: Ticket) {
+  // The PATCH response is authoritative; no follow-up GET is needed.
+  ticket.value = updated
+  emit('updated')
+}
+
+function onStale() {
+  // 409: reload the server's latest state; the user re-edits from there.
+  if (props.ticketId !== null) void load(props.ticketId)
+}
+
+function onClosed() {
+  ticket.value = null
+  errorMessage.value = ''
+  editVisible.value = false
 }
 
 function describeError(error: unknown): string {
@@ -75,6 +102,7 @@ function orNone(value: number | null | undefined): string {
     size="60%"
     :title="t('detail.title')"
     @update:model-value="emit('update:modelValue', $event)"
+    @closed="onClosed"
   >
     <el-skeleton v-if="loading" :rows="8" animated />
     <!-- never leave a blank drawer: failures render in place -->
@@ -172,6 +200,20 @@ function orNone(value: number | null | undefined): string {
         }}</el-descriptions-item>
       </el-descriptions>
     </template>
+
+    <template #footer>
+      <el-button type="primary" :disabled="loading || !ticket" @click="editVisible = true">{{
+        t('ticket.actions.edit')
+      }}</el-button>
+    </template>
+
+    <TicketEditDialog
+      v-if="ticket"
+      v-model="editVisible"
+      :ticket="ticket"
+      @updated="onUpdated"
+      @stale="onStale"
+    />
   </el-drawer>
 </template>
 

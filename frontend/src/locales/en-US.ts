@@ -15,6 +15,8 @@ export default {
   },
   common: {
     none: '--',
+    save: 'Save',
+    cancel: 'Cancel',
   },
   ticket: {
     columns: {
@@ -28,6 +30,8 @@ export default {
     },
     actions: {
       view: 'View',
+      create: 'Create Ticket',
+      edit: 'Edit',
     },
     filters: {
       statusAll: 'All statuses',
@@ -69,6 +73,25 @@ export default {
       updatedAt: 'Updated At',
     },
   },
+  create: {
+    title: 'Create Ticket',
+    placeholder: {
+      requesterId: 'Enter requester ID',
+    },
+    rules: {
+      required: 'This field is required',
+      titleMax: 'Title must not exceed 200 characters',
+      categoryMax: 'Category must not exceed 64 characters',
+      requesterPositive: 'Requester ID must be a positive integer',
+    },
+  },
+  edit: {
+    title: 'Edit Ticket',
+  },
+  feedback: {
+    created: 'Ticket created',
+    updated: 'Ticket updated',
+  },
   status: {
     OPEN: 'Open',
     ASSIGNED: 'Assigned',
@@ -88,5 +111,10 @@ export default {
     validationError: 'The request was rejected due to invalid parameters.',
     networkError: 'Cannot reach the backend service. Make sure it is running.',
     unknownError: 'An unexpected error occurred. Please try again later.',
+    requesterNotFound: 'The requester does not exist. Check the ID and try again.',
+    slaNotConfigured: 'No SLA policy is configured for this priority.',
+    ticketValidation: 'The values did not pass business validation.',
+    invalidPatch: 'The request contains fields that cannot be modified.',
+    staleRevision: 'This ticket has been updated. Reload it and try again.',
   },
 }
