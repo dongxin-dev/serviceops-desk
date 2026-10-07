@@ -32,6 +32,12 @@ export default {
       view: 'View',
       create: 'Create Ticket',
       edit: 'Edit',
+      assign: 'Assign',
+      reassign: 'Reassign',
+      start: 'Start',
+      resolve: 'Resolve',
+      close: 'Close',
+      reopen: 'Reopen',
     },
     filters: {
       statusAll: 'All statuses',
@@ -88,9 +94,37 @@ export default {
   edit: {
     title: 'Edit Ticket',
   },
+  assign: {
+    title: {
+      assign: 'Assign Ticket',
+      reassign: 'Reassign Ticket',
+    },
+    fields: {
+      assigneeId: 'Assignee ID',
+      actorId: 'Actor ID',
+    },
+    placeholder: {
+      assigneeId: 'Enter assignee ID',
+      actorId: 'Enter actor ID',
+    },
+    rules: {
+      positive: 'Must be a positive integer',
+    },
+  },
+  closeConfirm: {
+    title: 'Close Ticket',
+    message: 'Closing moves the ticket to its final state and cannot be undone. Close it?',
+    confirm: 'Close',
+    cancel: 'Cancel',
+  },
   feedback: {
     created: 'Ticket created',
     updated: 'Ticket updated',
+    assigned: 'Ticket assigned',
+    started: 'Ticket started',
+    resolved: 'Ticket resolved',
+    reopened: 'Ticket reopened',
+    closed: 'Ticket closed',
   },
   status: {
     OPEN: 'Open',
@@ -116,5 +150,8 @@ export default {
     ticketValidation: 'The values did not pass business validation.',
     invalidPatch: 'The request contains fields that cannot be modified.',
     staleRevision: 'This ticket has been updated. Reload it and try again.',
+    assigneeNotFound: 'The assignee does not exist. Check the ID and try again.',
+    actorNotFound: 'The actor does not exist. Check the ID and try again.',
+    illegalStateTransition: 'This action is not allowed in the current ticket state. Reload and try again.',
   },
 }

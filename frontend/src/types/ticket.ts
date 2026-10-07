@@ -91,3 +91,23 @@ export interface UpdateTicketInput {
   description?: string
   category?: string
 }
+
+/**
+ * Body of POST /api/v1/tickets/{id}/assign -> AssignTicketRequest.
+ * There is deliberately no assignmentType field: ASSIGN vs REASSIGN is
+ * decided by the backend domain, never by the client.
+ */
+export interface AssignTicketInput {
+  assigneeId: number
+  actorId: number
+  version: number
+}
+
+/**
+ * Shared body of POST /{id}/start | /resolve | /close | /reopen ->
+ * TicketActionRequest. Only the optimistic-lock token; no actorId or
+ * target status exists in the V1 contract.
+ */
+export interface TicketActionInput {
+  version: number
+}

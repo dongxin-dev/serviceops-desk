@@ -1,8 +1,10 @@
 import { http } from './http'
 
 import type {
+  AssignTicketInput,
   CreateTicketInput,
   Ticket,
+  TicketActionInput,
   TicketPage,
   TicketPriority,
   TicketStatus,
@@ -10,8 +12,10 @@ import type {
 } from '@/types/ticket'
 
 /**
- * F1/F2 surface: read endpoints + create + basic-info patch. Assign /
- * lifecycle actions belong to F3 and are deliberately absent here.
+ * Ticket API surface: read endpoints + create + basic-info patch +
+ * assignment + lifecycle actions. Each call returns the full ticket with
+ * the freshly incremented version. CLAIM has no backend endpoint in V1 and
+ * is deliberately absent here.
  */
 export interface TicketListParams {
   status?: TicketStatus
@@ -43,5 +47,34 @@ export async function createTicket(input: CreateTicketInput): Promise<Ticket> {
  */
 export async function updateTicket(id: number, input: UpdateTicketInput): Promise<Ticket> {
   const { data } = await http.patch<Ticket>(`/v1/tickets/${id}`, input)
+  return data
+}
+
+/**
+ * POST /v1/tickets/{id}/assign -> 200. Shared by assign and reassign: the
+ * backend domain decides ASSIGN vs REASSIGN, the client never sends a type.
+ */
+export async function assignTicket(id: number, input: AssignTicketInput): Promise<Ticket> {
+  const { data } = await http.post<Ticket>(`/v1/tickets/${id}/assign`, input)
+  return data
+}
+
+export async function startTicket(id: number, input: TicketActionInput): Promise<Ticket> {
+  const { data } = await http.post<Ticket>(`/v1/tickets/${id}/start`, input)
+  return data
+}
+
+export async function resolveTicket(id: number, input: TicketActionInput): Promise<Ticket> {
+  const { data } = await http.post<Ticket>(`/v1/tickets/${id}/resolve`, input)
+  return data
+}
+
+export async function closeTicket(id: number, input: TicketActionInput): Promise<Ticket> {
+  const { data } = await http.post<Ticket>(`/v1/tickets/${id}/close`, input)
+  return data
+}
+
+export async function reopenTicket(id: number, input: TicketActionInput): Promise<Ticket> {
+  const { data } = await http.post<Ticket>(`/v1/tickets/${id}/reopen`, input)
   return data
 }

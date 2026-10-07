@@ -32,6 +32,12 @@ export default {
       view: '查看',
       create: '新建工单',
       edit: '编辑',
+      assign: '分配',
+      reassign: '重新分配',
+      start: '开始处理',
+      resolve: '解决',
+      close: '关闭',
+      reopen: '重新打开',
     },
     filters: {
       statusAll: '全部状态',
@@ -88,9 +94,37 @@ export default {
   edit: {
     title: '编辑工单',
   },
+  assign: {
+    title: {
+      assign: '分配工单',
+      reassign: '重新分配工单',
+    },
+    fields: {
+      assigneeId: '处理人 ID',
+      actorId: '操作人 ID',
+    },
+    placeholder: {
+      assigneeId: '请输入处理人 ID',
+      actorId: '请输入操作人 ID',
+    },
+    rules: {
+      positive: '必须是正整数',
+    },
+  },
+  closeConfirm: {
+    title: '关闭工单',
+    message: '关闭后工单将进入终态，无法再次打开。确认关闭？',
+    confirm: '关闭',
+    cancel: '取消',
+  },
   feedback: {
     created: '工单已创建',
     updated: '工单已更新',
+    assigned: '工单已分配',
+    started: '工单已开始处理',
+    resolved: '工单已解决',
+    reopened: '工单已重新打开',
+    closed: '工单已关闭',
   },
   status: {
     OPEN: '待处理',
@@ -116,5 +150,8 @@ export default {
     ticketValidation: '填写内容未通过业务校验。',
     invalidPatch: '请求包含不允许修改的字段。',
     staleRevision: '工单已被其他操作更新，请重新加载后再试。',
+    assigneeNotFound: '处理人不存在，请检查 ID 是否正确。',
+    actorNotFound: '操作人不存在，请检查 ID 是否正确。',
+    illegalStateTransition: '当前工单状态不允许执行此操作，请刷新后重试。',
   },
 }
