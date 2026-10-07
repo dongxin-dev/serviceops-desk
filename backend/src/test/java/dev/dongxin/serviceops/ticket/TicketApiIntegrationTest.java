@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -245,5 +246,304 @@ class TicketApiIntegrationTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("TicketNotFound"))
                 .andExpect(jsonPath("$.path").value("/api/v1/tickets/9999999999"));
+    }
+
+    // ---------------------------------------------------------------
+    // D - List Tickets (pagination + filters)
+    // ---------------------------------------------------------------
+
+    private long createTicketViaApi(String title, String category, String priority) throws Exception {
+        MvcResult created = mockMvc.perform(post("/api/v1/tickets")
+                        .contentType(APPLICATION_JSON)
+                        .content(createJson(title, "description", category, priority, requesterId)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        return readId(created.getResponse().getContentAsString());
+    }
+
+    @Test
+    void listDefaultsToPageZeroSizeTwenty() throws Exception {
+        mockMvc.perform(get("/api/v1/tickets"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.totalElements").isNumber())
+                .andExpect(jsonPath("$.totalPages").isNumber());
+    }
+
+    @Test
+    void listHonoursCustomPageSizeAndIsDeterministic() throws Exception {
+        createTicketViaApi("deterministic-1", "MISC", "P3_MEDIUM");
+        long newest = createTicketViaApi("deterministic-2", "MISC", "P3_MEDIUM");
+
+        // Fixed order createdAt DESC, id DESC -> the just-created ticket is first.
+        mockMvc.perform(get("/api/v1/tickets").param("page", "1").param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(1))
+                .andExpect(jsonPath("$.size").value(1));
+
+        mockMvc.perform(get("/api/v1/tickets").param("page", "0").param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", Matchers.hasSize(1)))
+                .andExpect(jsonPath("$.content[0].id").value(newest));
+    }
+
+    @Test
+    void listFiltersByStatus() throws Exception {
+        createTicketViaApi("filter-status", "MISC", "P3_MEDIUM");
+        mockMvc.perform(get("/api/v1/tickets").param("status", "OPEN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[*].status",
+                        Matchers.everyItem(Matchers.is("OPEN"))));
+    }
+
+    @Test
+    void listFiltersByPriority() throws Exception {
+        createTicketViaApi("filter-prio", "MISC", "P1_CRITICAL");
+        mockMvc.perform(get("/api/v1/tickets").param("priority", "P1_CRITICAL"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[*].priority",
+                        Matchers.everyItem(Matchers.is("P1_CRITICAL"))));
+    }
+
+    @Test
+    void listFiltersByStatusAndPriorityTogether() throws Exception {
+        createTicketViaApi("filter-both", "MISC", "P4_LOW");
+        mockMvc.perform(get("/api/v1/tickets")
+                        .param("status", "OPEN").param("priority", "P4_LOW"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[*].status",
+                        Matchers.everyItem(Matchers.is("OPEN"))))
+                .andExpect(jsonPath("$.content[*].priority",
+                        Matchers.everyItem(Matchers.is("P4_LOW"))));
+    }
+
+    @Test
+    void listRejectsNegativePage() throws Exception {
+        mockMvc.perform(get("/api/v1/tickets").param("page", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("TicketValidation"));
+    }
+
+    @Test
+    void listRejectsZeroSize() throws Exception {
+        mockMvc.perform(get("/api/v1/tickets").param("size", "0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("TicketValidation"));
+    }
+
+    @Test
+    void listRejectsOversizedPage() throws Exception {
+        mockMvc.perform(get("/api/v1/tickets").param("size", "101"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("TicketValidation"));
+    }
+
+    @Test
+    void listRejectsIllegalEnumValue() throws Exception {
+        mockMvc.perform(get("/api/v1/tickets").param("status", "NOT_A_STATUS"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("InvalidParameter"));
+    }
+
+    @Test
+    void listReturnsEmptyContentArrayWhenNothingMatches() throws Exception {
+        // No state-transition API exists, so REOPENED can never be present.
+        mockMvc.perform(get("/api/v1/tickets").param("status", "REOPENED"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", Matchers.hasSize(0)))
+                .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    // ---------------------------------------------------------------
+    // E - PATCH basic info (title / description / category only)
+    // ---------------------------------------------------------------
+
+    private MvcResult patchTicket(long id, String body) throws Exception {
+        return mockMvc.perform(patch("/api/v1/tickets/{id}", id)
+                        .contentType(APPLICATION_JSON)
+                        .content(body))
+                .andReturn();
+    }
+
+    @Test
+    void patchTitleOnlySucceedsAndBumpsVersion() throws Exception {
+        long id = createTicketViaApi("patch-title", "MISC", "P3_MEDIUM");
+
+        MvcResult result = patchTicket(id, "{\"title\":\"Patched title\",\"version\":0}");
+
+        assertEquals(200, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+        String body = result.getResponse().getContentAsString();
+        assertNotNull(readId(body));
+        assertEquals("Patched title",
+                tools.jackson.databind.json.JsonMapper.builder().build()
+                        .readTree(body).get("title").asString());
+        assertEquals(1,
+                tools.jackson.databind.json.JsonMapper.builder().build()
+                        .readTree(body).get("version").asInt());
+
+        // Response version equals the database-incremented version.
+        TicketJpaEntity stored = ticketRepository.findById(id).orElseThrow();
+        assertEquals(1, stored.getVersion());
+        assertEquals("Patched title", stored.getTitle());
+        assertEquals("MISC", stored.getCategory());
+
+        // PATCH then GET verifies persistence.
+        mockMvc.perform(get("/api/v1/tickets/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Patched title"))
+                .andExpect(jsonPath("$.version").value(1));
+    }
+
+    @Test
+    void patchDescriptionOnlyKeepsOtherFields() throws Exception {
+        long id = createTicketViaApi("patch-desc", "MISC", "P3_MEDIUM");
+        MvcResult result = patchTicket(id, "{\"description\":\"Patched description\",\"version\":0}");
+        assertEquals(200, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+        TicketJpaEntity stored = ticketRepository.findById(id).orElseThrow();
+        assertEquals("Patched description", stored.getDescription());
+        assertEquals("patch-desc", stored.getTitle());
+        assertEquals("MISC", stored.getCategory());
+    }
+
+    @Test
+    void patchCategoryOnlyKeepsOtherFields() throws Exception {
+        long id = createTicketViaApi("patch-cat", "MISC", "P3_MEDIUM");
+        MvcResult result = patchTicket(id, "{\"category\":\"HARDWARE\",\"version\":0}");
+        assertEquals(200, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+        TicketJpaEntity stored = ticketRepository.findById(id).orElseThrow();
+        assertEquals("HARDWARE", stored.getCategory());
+        assertEquals("patch-cat", stored.getTitle());
+    }
+
+    @Test
+    void patchMultipleFieldsAtOnce() throws Exception {
+        long id = createTicketViaApi("patch-multi", "MISC", "P3_MEDIUM");
+        MvcResult result = patchTicket(id,
+                "{\"title\":\"T9\",\"description\":\"D9\",\"category\":\"NETWORK\",\"version\":0}");
+        assertEquals(200, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+        TicketJpaEntity stored = ticketRepository.findById(id).orElseThrow();
+        assertEquals("T9", stored.getTitle());
+        assertEquals("D9", stored.getDescription());
+        assertEquals("NETWORK", stored.getCategory());
+        assertEquals(1, stored.getVersion());
+    }
+
+    @Test
+    void patchExplicitNullTitleIsRejected() throws Exception {
+        long id = createTicketViaApi("patch-null-t", "MISC", "P3_MEDIUM");
+        MvcResult result = patchTicket(id, "{\"title\":null,\"version\":0}");
+        assertEquals(400, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+    }
+
+    @Test
+    void patchExplicitNullDescriptionIsRejected() throws Exception {
+        long id = createTicketViaApi("patch-null-d", "MISC", "P3_MEDIUM");
+        MvcResult result = patchTicket(id, "{\"description\":null,\"version\":0}");
+        assertEquals(400, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+    }
+
+    @Test
+    void patchExplicitNullCategoryIsRejected() throws Exception {
+        long id = createTicketViaApi("patch-null-c", "MISC", "P3_MEDIUM");
+        MvcResult result = patchTicket(id, "{\"category\":null,\"version\":0}");
+        assertEquals(400, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+    }
+
+    @Test
+    void patchEmptyBodyIsRejected() throws Exception {
+        long id = createTicketViaApi("patch-empty", "MISC", "P3_MEDIUM");
+        MvcResult result = patchTicket(id, "{}");
+        // {} lacks the required version token -> bean validation 400.
+        // The "version present but no business field" case is the empty-patch
+        // test below (TicketValidation from UpdateTicketCommand).
+        assertEquals(400, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+        assertEquals("ValidationError",
+                tools.jackson.databind.json.JsonMapper.builder().build()
+                        .readTree(result.getResponse().getContentAsString()).get("error").asString());
+    }
+
+    @Test
+    void patchVersionOnlyIsStillEmptyPatch() throws Exception {
+        long id = createTicketViaApi("patch-vonly", "MISC", "P3_MEDIUM");
+        MvcResult result = patchTicket(id, "{\"version\":0}");
+        assertEquals(400, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+        assertEquals("TicketValidation",
+                tools.jackson.databind.json.JsonMapper.builder().build()
+                        .readTree(result.getResponse().getContentAsString()).get("error").asString());
+    }
+
+    @Test
+    void patchBlankTitleIsRejected() throws Exception {
+        long id = createTicketViaApi("patch-blank", "MISC", "P3_MEDIUM");
+        MvcResult result = patchTicket(id, "{\"title\":\"   \",\"version\":0}");
+        assertEquals(400, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+    }
+
+    @Test
+    void patchOversizedTitleIsRejected() throws Exception {
+        long id = createTicketViaApi("patch-long", "MISC", "P3_MEDIUM");
+        MvcResult result = patchTicket(id, "{\"title\":\"" + "T".repeat(201) + "\",\"version\":0}");
+        assertEquals(400, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+    }
+
+    @Test
+    void patchMissingTicketReturns404() throws Exception {
+        MvcResult result = patchTicket(9_999_999_999L, "{\"title\":\"x\",\"version\":0}");
+        assertEquals(404, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+    }
+
+    @Test
+    void patchWithStaleVersionReturns409AndKeepsSecondWriteOut() throws Exception {
+        long id = createTicketViaApi("patch-stale", "MISC", "P3_MEDIUM");
+
+        MvcResult first = patchTicket(id, "{\"title\":\"first write\",\"version\":0}");
+        assertEquals(200, first.getResponse().getStatus(), first.getResponse().getContentAsString());
+
+        MvcResult second = patchTicket(id, "{\"title\":\"stale write\",\"version\":0}");
+        assertEquals(409, second.getResponse().getStatus(), second.getResponse().getContentAsString());
+        assertEquals("TicketStaleRevision",
+                tools.jackson.databind.json.JsonMapper.builder().build()
+                        .readTree(second.getResponse().getContentAsString()).get("error").asString());
+
+        TicketJpaEntity stored = ticketRepository.findById(id).orElseThrow();
+        assertEquals("first write", stored.getTitle());
+        assertEquals(1, stored.getVersion());
+    }
+
+    @Test
+    void patchWithForbiddenStatusFieldIsRejectedAndStateUnchanged() throws Exception {
+        long id = createTicketViaApi("patch-forbidden", "MISC", "P3_MEDIUM");
+        MvcResult result = patchTicket(id, "{\"status\":\"CLOSED\",\"version\":0}");
+        assertEquals(400, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+        assertEquals("InvalidPatchRequest",
+                tools.jackson.databind.json.JsonMapper.builder().build()
+                        .readTree(result.getResponse().getContentAsString()).get("error").asString());
+
+        TicketJpaEntity stored = ticketRepository.findById(id).orElseThrow();
+        assertEquals(TicketStatus.OPEN, stored.getStatus());
+        assertEquals(0, stored.getVersion());
+    }
+
+    @Test
+    void patchUnknownTypoFieldIsRejected() throws Exception {
+        long id = createTicketViaApi("patch-typo", "MISC", "P3_MEDIUM");
+        MvcResult result = patchTicket(id, "{\"titlle\":\"typo\",\"version\":0}");
+        assertEquals(400, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+        // Unknown-field rejection is a WEB contract concern, not a domain one.
+        assertEquals("InvalidPatchRequest",
+                tools.jackson.databind.json.JsonMapper.builder().build()
+                        .readTree(result.getResponse().getContentAsString()).get("error").asString());
+
+        TicketJpaEntity stored = ticketRepository.findById(id).orElseThrow();
+        assertEquals("patch-typo", stored.getTitle());
+    }
+
+    @Test
+    void patchWithoutVersionIsRejected() throws Exception {
+        long id = createTicketViaApi("patch-nover", "MISC", "P3_MEDIUM");
+        MvcResult result = patchTicket(id, "{\"title\":\"no version\"}");
+        assertEquals(400, result.getResponse().getStatus(), result.getResponse().getContentAsString());
     }
 }

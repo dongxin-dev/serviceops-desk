@@ -1,13 +1,13 @@
 package dev.dongxin.serviceops.ticket.application.port;
 
+import dev.dongxin.serviceops.ticket.application.ListTicketsQuery;
 import dev.dongxin.serviceops.ticket.domain.Ticket;
 
 import java.util.Optional;
 
 /**
  * Persistence port for the Ticket aggregate, limited to what the current
- * slice (create + get) actually needs. No update/list methods until a use
- * case requires them.
+ * slices (create + get + list + basic-info patch) actually need.
  */
 public interface TicketRepository {
 
@@ -18,4 +18,13 @@ public interface TicketRepository {
     Ticket saveNew(Ticket ticket);
 
     Optional<Ticket> findById(Long id);
+
+    /** Pageable ticket list with optional status / priority filters. */
+    PageResult<Ticket> search(ListTicketsQuery query);
+
+    /**
+     * Persists changes made to an existing aggregate and returns the updated
+     * domain object carrying the new database-managed version.
+     */
+    Ticket update(Ticket ticket);
 }

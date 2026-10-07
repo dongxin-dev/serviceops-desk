@@ -124,6 +124,21 @@ public class TicketJpaEntity {
                 null, null, null, 0, createdAt, updatedAt);
     }
 
+    /**
+     * Copies the mutable basic-info state of an existing aggregate onto this
+     * MANAGED entity for the patch use case. Only title / description /
+     * category / updatedAt may be written; id, ticketNo, priority, status,
+     * requester, assignee, SLA fields, escalationLevel, version and createdAt
+     * are intentionally untouched (Hibernate owns version via @Version).
+     */
+    void applyMutableState(String title, String description, String category,
+                           OffsetDateTime updatedAt) {
+        this.title = title;
+        this.description = description;
+        this.category = category;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getId() {
         return id;
     }

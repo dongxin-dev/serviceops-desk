@@ -1,17 +1,25 @@
 package dev.dongxin.serviceops.ticket.web;
 
 import dev.dongxin.serviceops.ticket.application.CreateTicketCommand;
+import dev.dongxin.serviceops.ticket.application.ListTicketsQuery;
 import dev.dongxin.serviceops.ticket.application.TicketApplicationService;
+import dev.dongxin.serviceops.ticket.application.port.PageResult;
 import dev.dongxin.serviceops.ticket.domain.Ticket;
+import dev.dongxin.serviceops.ticket.domain.TicketPriority;
+import dev.dongxin.serviceops.ticket.domain.TicketStatus;
 import dev.dongxin.serviceops.ticket.web.dto.CreateTicketRequest;
+import dev.dongxin.serviceops.ticket.web.dto.TicketListResponse;
 import dev.dongxin.serviceops.ticket.web.dto.TicketResponse;
+import dev.dongxin.serviceops.ticket.web.dto.UpdateTicketRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -48,5 +56,32 @@ public class TicketController {
     @GetMapping("/{id}")
     public TicketResponse get(@PathVariable Long id) {
         return TicketResponse.from(ticketService.get(id));
+    }
+
+    /**
+     * Paginated list. Sorting is NOT client-controllable in V1; the fixed
+     * deterministic order lives in the infrastructure adapter. Page-size bounds
+     * are re-checked by the ListTicketsQuery constructor (-> 400 via
+     * TicketValidationException mapping).
+     */
+    @GetMapping
+    public TicketListResponse list(
+            @RequestParam(required = false) TicketStatus status,
+            @RequestParam(required = false) TicketPriority priority,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        PageResult<Ticket> result = ticketService.list(new ListTicketsQuery(status, priority, page, size));
+        return TicketListResponse.from(result);
+    }
+
+    /**
+     * Basic-info patch (title / description / category only). Presence-vs-null
+     * and unknown-field rules are enforced by UpdateTicketRequest itself; the
+     * version token is pre-checked in the application service.
+     */
+    @PatchMapping("/{id}")
+    public TicketResponse patch(@PathVariable Long id,
+                                @Valid @RequestBody UpdateTicketRequest request) {
+        return TicketResponse.from(ticketService.patch(request.toCommand(id)));
     }
 }

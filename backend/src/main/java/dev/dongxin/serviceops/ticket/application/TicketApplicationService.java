@@ -3,6 +3,8 @@ package dev.dongxin.serviceops.ticket.application;
 import dev.dongxin.serviceops.ticket.application.exception.RequesterNotFoundException;
 import dev.dongxin.serviceops.ticket.application.exception.SlaPolicyNotConfiguredException;
 import dev.dongxin.serviceops.ticket.application.exception.TicketNotFoundException;
+import dev.dongxin.serviceops.ticket.application.exception.TicketStaleRevisionException;
+import dev.dongxin.serviceops.ticket.application.port.PageResult;
 import dev.dongxin.serviceops.ticket.application.port.RequesterLookup;
 import dev.dongxin.serviceops.ticket.application.port.SlaPolicyData;
 import dev.dongxin.serviceops.ticket.application.port.SlaPolicyLookup;
@@ -14,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 
 /**
- * Use-case orchestration for the Ticket module (V1 slice: create + get).
+ * Use-case orchestration for the Ticket module.
  *
  * <p>Depends only on the domain, application ports / commands / exceptions and
  * Spring application-level annotations. Persistence details live behind the
@@ -71,5 +73,30 @@ public class TicketApplicationService {
     public Ticket get(Long id) {
         return ticketRepository.findById(id)
                 .orElseThrow(() -> new TicketNotFoundException(id));
+    }
+
+    @Transactional(readOnly = true)
+    public PageResult<Ticket> list(ListTicketsQuery query) {
+        return ticketRepository.search(query);
+    }
+
+    /**
+     * Basic-info patch. Pre-checks the optimistic-lock token for a clear
+     * business error; JPA @Version remains the final concurrency guard
+     * (races surface as a Spring OptimisticLocking failure mapped to 409
+     * by the web layer). Version is never incremented by business code.
+     */
+    @Transactional
+    public Ticket patch(UpdateTicketCommand command) {
+        Ticket ticket = ticketRepository.findById(command.id())
+                .orElseThrow(() -> new TicketNotFoundException(command.id()));
+
+        if (!ticket.getVersion().equals(command.version())) {
+            throw new TicketStaleRevisionException(command.id(), ticket.getVersion(), command.version());
+        }
+
+        ticket.updateBasicInfo(command.title(), command.description(), command.category(),
+                OffsetDateTime.now());
+        return ticketRepository.update(ticket);
     }
 }

@@ -5,11 +5,10 @@ import java.time.OffsetDateTime;
 /**
  * Ticket aggregate root (framework-free).
  *
- * <p>This slice covers creation and retrieval only. Fields that future
- * state-transition / assignment behavior will change are non-final but have NO
- * public setters: they may only evolve through upcoming domain operations
- * (assign, startProgress, resolve, close, reopen) validated against the frozen
- * state machine. Identity and creation-time facts stay immutable.
+ * <p>Fields that state-transition / assignment behavior will change are
+ * non-final but have NO public setters: they may only evolve through domain
+ * operations validated against the frozen state machine. Identity and
+ * creation-time facts stay immutable.
  */
 public class Ticket {
 
@@ -81,19 +80,19 @@ public class Ticket {
         requireText(description, "description");
         requireMaxLength(category, CATEGORY_MAX_LENGTH, "category");
         if (priority == null) {
-            throw new IllegalArgumentException("priority must not be null");
+            throw new TicketValidationException("priority must not be null");
         }
         if (requesterId == null || requesterId <= 0) {
-            throw new IllegalArgumentException("requesterId must be a positive id");
+            throw new TicketValidationException("requesterId must be a positive id");
         }
         if (slaPolicyId == null || slaPolicyId <= 0) {
-            throw new IllegalArgumentException("slaPolicyId must be a positive id");
+            throw new TicketValidationException("slaPolicyId must be a positive id");
         }
         if (createdAt == null || responseDueAt == null || resolutionDueAt == null) {
-            throw new IllegalArgumentException("SLA snapshot fields must not be null");
+            throw new TicketValidationException("SLA snapshot fields must not be null");
         }
         if (responseDueAt.isBefore(createdAt) || resolutionDueAt.isBefore(createdAt)) {
-            throw new IllegalArgumentException("SLA deadlines must not be earlier than creation time");
+            throw new TicketValidationException("SLA deadlines must not be earlier than creation time");
         }
         return new Ticket(null, ticketNo, title, description, category, priority,
                 TicketStatus.OPEN, requesterId, null, slaPolicyId, responseDueAt, resolutionDueAt,
@@ -115,15 +114,49 @@ public class Ticket {
 
     private static void requireText(String value, String field) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(field + " must not be blank");
+            throw new TicketValidationException(field + " must not be blank");
         }
     }
 
     private static void requireMaxLength(String value, int max, String field) {
         requireText(value, field);
         if (value.length() > max) {
-            throw new IllegalArgumentException(field + " must not exceed " + max + " characters");
+            throw new TicketValidationException(field + " must not exceed " + max + " characters");
         }
+    }
+
+    /**
+     * Business update of the basic information fields (PATCH semantics).
+     *
+     * <p>A {@code null} parameter means "not provided, keep current value" - the
+     * presence / explicit-null discrimination happens at the web boundary.
+     * Any provided value is re-validated against aggregate invariants. An
+     * update that provides no field at all is a no-op the aggregate rejects -
+     * this rule lives here, not only in outer layers. Version is never touched
+     * here; concurrency control is delegated to JPA {@code @Version}.
+     */
+    public void updateBasicInfo(String title, String description, String category,
+                                OffsetDateTime updatedAt) {
+        if (title == null && description == null && category == null) {
+            throw new TicketValidationException(
+                    "at least one basic information field is required for an update");
+        }
+        if (updatedAt == null) {
+            throw new TicketValidationException("updatedAt is required for a business update");
+        }
+        if (title != null) {
+            requireMaxLength(title, TITLE_MAX_LENGTH, "title");
+            this.title = title;
+        }
+        if (description != null) {
+            requireText(description, "description");
+            this.description = description;
+        }
+        if (category != null) {
+            requireMaxLength(category, CATEGORY_MAX_LENGTH, "category");
+            this.category = category;
+        }
+        this.updatedAt = updatedAt;
     }
 
     public Long getId() {
