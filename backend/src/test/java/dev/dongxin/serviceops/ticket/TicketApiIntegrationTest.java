@@ -201,17 +201,21 @@ class TicketApiIntegrationTest {
 
     // ---------------------------------------------------------------
     // B5 - no enabled SLA policy for the priority
-    // Tested at service level inside a rolled-back transaction so the
-    // seeded sla_policy data itself is never permanently modified.
+    // Tested at service level inside a rolled-back transaction. The seeded
+    // policy is disabled, never deleted: legitimate tickets reference it via
+    // fk_ticket_sla_policy, and the business precondition of the use case is
+    // "no ENABLED policy", which a disabled row satisfies exactly.
     // ---------------------------------------------------------------
 
     @Test
     @Transactional
     void createFailsWhenSlaPolicyIsMissing() {
-        SlaPolicyJpaEntity policy = slaPolicyRepository
-                .findByPriorityAndEnabled(TicketPriority.P4_LOW, true).orElseThrow();
-        slaPolicyRepository.delete(policy);
-        slaPolicyRepository.flush();
+        // Raw SQL, and deliberately no repository load of the policy first: the
+        // service lookup then reads the disabled row from the database instead of
+        // a managed entity cached in this transaction's persistence context.
+        int disabled = jdbcTemplate.update(
+                "UPDATE sla_policy SET enabled = FALSE WHERE priority = ?", "P4_LOW");
+        assertEquals(1, disabled, "seeded P4_LOW SLA policy is required for this test");
 
         assertThrows(SlaPolicyNotConfiguredException.class, () -> ticketService.create(
                 new CreateTicketCommand("title", "description", "CATEGORY",
@@ -347,13 +351,38 @@ class TicketApiIntegrationTest {
                 .andExpect(jsonPath("$.error").value("InvalidParameter"));
     }
 
+    private long readTotalElements(MvcResult result) throws Exception {
+        return tools.jackson.databind.json.JsonMapper.builder().build()
+                .readTree(result.getResponse().getContentAsString())
+                .get("totalElements").asLong();
+    }
+
     @Test
     void listReturnsEmptyContentArrayWhenNothingMatches() throws Exception {
-        // No state-transition API exists, so REOPENED can never be present.
-        mockMvc.perform(get("/api/v1/tickets").param("status", "REOPENED"))
+        // REOPENED is a legitimate lifecycle state now, so no status/priority
+        // filter may be assumed empty. The unrequestable page is therefore derived
+        // from what the database reports for that very filter: with size=1 the last
+        // valid index is totalElements-1, so page=totalElements is one past the end
+        // and must answer 200 with an empty content array. If the filter matches
+        // nothing, totalElements is 0 and this is the plain empty-result case.
+        long matchingElements = readTotalElements(mockMvc.perform(
+                        get("/api/v1/tickets")
+                                .param("status", "REOPENED").param("priority", "P1_CRITICAL")
+                                .param("page", "0").param("size", "1"))
+                        .andExpect(status().isOk())
+                        .andReturn());
+
+        MvcResult beyondLastPage = mockMvc.perform(
+                        get("/api/v1/tickets")
+                                .param("status", "REOPENED").param("priority", "P1_CRITICAL")
+                                .param("page", String.valueOf(matchingElements)).param("size", "1"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content", Matchers.hasSize(0)))
-                .andExpect(jsonPath("$.totalElements").value(0));
+                .andExpect(jsonPath("$.size").value(1))
+                .andReturn();
+
+        assertEquals(matchingElements, readTotalElements(beyondLastPage));
     }
 
     // ---------------------------------------------------------------
